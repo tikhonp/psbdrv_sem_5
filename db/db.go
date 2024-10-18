@@ -1,7 +1,9 @@
 package db
 
 import (
+	"bytes"
 	"fmt"
+	"os"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -21,5 +23,19 @@ func DataSourceName(cfg *config.Database) string {
 // MustConnect creates a new in-memory SQLite database and initializes it with the schema.
 func MustConnect(cfg *config.Database) {
 	db = sqlx.MustConnect("postgres", DataSourceName(cfg))
+}
+
+func ExecuteFile(path string) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(f)
+
+	_, err = db.Exec(buf.String())
+	return err
 }
 

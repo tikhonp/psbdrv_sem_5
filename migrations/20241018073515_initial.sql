@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE public.customer (
-    id INTEGER PRIMARY KEY NOT NULL,
+    id BIGSERIAL PRIMARY KEY NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     contract_data TEXT
@@ -22,7 +22,7 @@ CREATE TYPE public.quantity_unit as ENUM (
 );
 
 CREATE TABLE public.order (
-    id INTEGER PRIMARY KEY NOT NULL,
+    id BIGSERIAL PRIMARY KEY NOT NULL,
     date DATE NOT NULL,
     tech_spec_id INTEGER NOT NULL,
     customer_id INTEGER NOT NULL,
@@ -32,18 +32,18 @@ CREATE TABLE public.order (
 );
 
 CREATE TABLE public.tech_spec (
-    id INTEGER PRIMARY KEY NOT NULL,
+    id BIGSERIAL PRIMARY KEY NOT NULL,
     quality_id INTEGER NOT NULL,
     product_type_id INTEGER NOT NULL
 );
 
 CREATE TABLE public.quality (
-    id INTEGER PRIMARY KEY NOT NULL,
+    id BIGSERIAL PRIMARY KEY NOT NULL,
     name VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE public.product_type (
-    id INTEGER PRIMARY KEY NOT NULL,
+    id BIGSERIAL PRIMARY KEY NOT NULL,
     name VARCHAR(255) NOT NULL
 );
 -- +goose StatementEnd
