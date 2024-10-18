@@ -1,0 +1,42 @@
+services:
+  server:
+    container_name: psbdrv-server
+    image: psbdrv-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - localnet
+
+  db:
+    container_name: psbdrv-db
+    image: postgres
+    restart: always
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=dummy
+      - POSTGRES_DB=psbdrv-db
+      - POSTGRES_PASSWORD=blablabla
+    ports:
+      - 5432:5432
+      - 9990:9990
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-U", "medsenger", "-d", "scales-medsenger-bot" ]
+      interval: 1s
+      timeout: 5s
+      retries: 5
+    networks:
+      - localnet
+    hostname: db
+
+volumes:
+  db-data:
+
+networks:
+  localnet:
+    driver: bridge
+

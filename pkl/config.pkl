@@ -1,0 +1,14 @@
+@go.Package { name = "github.com/tikhonp/psbdrv_sem_5/config" }
+module config
+
+import "package://pkg.pkl-lang.org/pkl-go/pkl.golang@0.8.0#/go.pkl"
+
+/// Postgres database configuration.
+class Database {
+  user: String
+  password: String
+  dbname: String
+  host: String
+}
+
+db: Database
