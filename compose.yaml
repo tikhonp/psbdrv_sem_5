@@ -18,6 +18,7 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
       - POSTGRES_USER=dummy
       - POSTGRES_DB=psbdrv-db
       - POSTGRES_PASSWORD=blablabla
