@@ -1,125 +1,69 @@
-INSERT INTO public.customer(name,
-                            description,
-                            contract_data)
-VALUES ('Сызранский рудный завод',
-        'Перерабатывающеее предприятие',
-        NULL),
-       ('Волжский металлургический завод',
-        'Производство металлопроката',
-        NULL),
-       ('Куйбышевский завод строительных материалов',
-        'Производство кирпичей',
-        NULL),
-       ('Самарский завод строительных материалов',
-        'Производство керамической плитки',
-        NULL),
-       ('Тольяттинский завод строительных материалов',
-        'Производство керамической плитки',
-        NULL),
-       ('Сызранский завод строительных материалов',
-        'Производство кирпичей',
-        NULL),
-       ('Самарский завод строительных материалов',
-        'Производство кирпичей',
-        NULL),
-       ('Тольяттинский завод строительных материалов',
-        'Производство кирпичей',
-        NULL),
-       ('Куйбышевский завод строительных материалов',
-        'Производство керамической плитки',
-        NULL),
-       ('Самарский завод строительных материалов',
-        'Производство керамической плитки',
-        NULL),
-       ('Тольяттинский завод строительных материалов',
-        'Производство керамической плитки',
-        NULL),
-       ('Сызранский завод строительных материалов',
-        'Производство керамической плитки',
-        NULL),
-       ('Куйбышевский завод строительных материалов',
-        'Производство кирпичей',
-        NULL),
-       ('Самарский завод строительных материалов',
-        'Производство кирпичей',
-        NULL);
+INSERT INTO service_center (customer_name, operator_name, order_date) VALUES
+('Иван Петров', 'Сергей Иванов', '2024-06-01'),
+('Мария Сидорова', 'Андрей Смирнов', '2024-06-02'),
+('Ольга Кузнецова', 'Петр Васильев', '2024-06-03'),
+('Дмитрий Орлов', 'Анна Чернова', '2024-06-04'),
+('Екатерина Белова', 'Виктор Миронов', '2024-06-05');
 
-INSERT INTO public.quality(name)
-VALUES ('Высокое'),
-       ('Среднее'),
-       ('Низкое');
+INSERT INTO technical_assignment (product_name, required_quantity, due_date, required_quality, id_order) VALUES
+('Шурупы', 500, '2024-07-01', 'Высокое', 1),
+('Гайки', 300, '2024-07-05', 'Среднее', 2),
+('Болты', 1000, '2024-07-10', 'Высокое', 3),
+('Шайбы', 200, '2024-07-15', 'Низкое', 4),
+('Проволока', 400, '2024-07-20', 'Среднее', 5);
 
-INSERT INTO public.product_type(name)
-VALUES ('Кирпич'),
-       ('Керамическая плитка');
+INSERT INTO gost_norms (gost_name, legal_features, tpi) VALUES
+('ГОСТ 12345-67', 'Прочные материалы', 'Технические требования 1'),
+('ГОСТ 23456-78', 'Стандартные размеры', 'Технические требования 2'),
+('ГОСТ 34567-89', 'Термостойкость', 'Технические требования 3'),
+('ГОСТ 45678-90', 'Высокая нагрузка', 'Технические требования 4'),
+('ГОСТ 56789-01', 'Антикоррозийные свойства', 'Технические требования 5');
 
-WITH inserted_tech_spec_1 AS (
-    INSERT INTO public.tech_spec (quality_id, product_type_id) VALUES ((SELECT id FROM public.quality WHERE name = 'Высокое'),
-                                                                       (SELECT id FROM public.product_type WHERE name = 'Кирпич')) RETURNING *)
-INSERT
-INTO public.order(date,
-                  tech_spec_id,
-                  customer_id,
-                  state,
-                  quantity,
-                  quantity_unit)
-VALUES ('2024-01-01',
-        (SELECT id FROM inserted_tech_spec_1 LIMIT 1),
-        (SELECT id FROM public.customer WHERE name = 'Сызранский рудный завод'),
-        'producing',
-        100,
-        'ton');
+INSERT INTO production_process (id_gost, semi_product_name, quantity, quality, workshop_name) VALUES
+(1, 'Полуфабрикат А', 50, 'Высокое', 'Цех 1'),
+(2, 'Полуфабрикат Б', 30, 'Среднее', 'Цех 2'),
+(3, 'Полуфабрикат В', 20, 'Низкое', 'Цех 3'),
+(4, 'Полуфабрикат Г', 40, 'Среднее', 'Цех 4'),
+(5, 'Полуфабрикат Д', 60, 'Высокое', 'Цех 5');
 
-WITH inserted_tech_spec_2 AS (
-    INSERT INTO public.tech_spec (quality_id, product_type_id) VALUES ((SELECT id FROM public.quality WHERE name = 'Среднее' LIMIT 1),
-                                                                       (SELECT id FROM public.product_type WHERE name = 'Кирпич' LIMIT 1)) RETURNING id)
-INSERT
-INTO public.order(date,
-                  tech_spec_id,
-                  customer_id,
-                  state,
-                  quantity,
-                  quantity_unit)
-VALUES ('2024-01-02',
-        (SELECT id FROM inserted_tech_spec_2),
-        (SELECT id FROM public.customer WHERE name = 'Волжский металлургический завод'),
-        'producing',
-        200,
-        'ton');
+INSERT INTO personal_data (position, phone_number, email, address) VALUES
+('Инженер', '+7-900-123-45-67', 'ivanov@mail.ru', 'Москва, ул. Ленина, д. 1'),
+('Оператор', '+7-900-234-56-78', 'smirnov@mail.ru', 'Москва, ул. Пушкина, д. 2'),
+('Технолог', '+7-900-345-67-89', 'petrov@mail.ru', 'Москва, ул. Гагарина, д. 3'),
+('Менеджер', '+7-900-456-78-90', 'belova@mail.ru', 'Москва, ул. Чайковского, д. 4'),
+('Слесарь', '+7-900-567-89-01', 'sidorova@mail.ru', 'Москва, ул. Кирова, д. 5');
 
-WITH inserted_tech_spec_3 AS (
-    INSERT INTO public.tech_spec (quality_id, product_type_id) VALUES ((SELECT id FROM public.quality WHERE name = 'Низкое' LIMIT 1),
-                                                                       (SELECT id FROM public.product_type WHERE name = 'Кирпич' LIMIT 1)) RETURNING id)
-INSERT
-INTO public.order(date,
-                  tech_spec_id,
-                  customer_id,
-                  state,
-                  quantity,
-                  quantity_unit)
-VALUES ('2024-01-03',
-        (SELECT id FROM inserted_tech_spec_3),
-        (SELECT id FROM public.customer WHERE name = 'Куйбышевский завод строительных материалов' LIMIT 1),
-        'producing',
-        300,
-        'ton');
+INSERT INTO raw_material (name, availability, quantity, storage_duration, quality) VALUES
+('Сталь', TRUE, 1000, 180, 'Высокое'),
+('Алюминий', TRUE, 500, 90, 'Среднее'),
+('Медь', FALSE, 0, 60, 'Высокое'),
+('Пластик', TRUE, 200, 120, 'Низкое'),
+('Резина', TRUE, 300, 150, 'Среднее');
 
-WITH texh_spec_id_4 AS (
-    INSERT INTO public.tech_spec (quality_id, product_type_id) VALUES ((SELECT id FROM public.quality WHERE name = 'Высокое' LIMIT 1),
-                                                                       (SELECT id
-                                                                        FROM public.product_type
-                                                                        WHERE name = 'Керамическая плитка'
-                                                                        LIMIT 1)) RETURNING id)
-INSERT
-INTO public.order(date,
-                  tech_spec_id,
-                  customer_id,
-                  state,
-                  quantity,
-                  quantity_unit)
-VALUES ('2024-01-04',
-        (SELECT id FROM texh_spec_id_4),
-        (SELECT id FROM public.customer WHERE name = 'Самарский завод строительных материалов' LIMIT 1),
-        'producing',
-        400,
-        'ton');
+INSERT INTO tools (name, quantity, "current_user", condition) VALUES
+('Молоток', 10, 'Иван Петров', 'Исправен'),
+('Отвертка', 20, 'Сергей Иванов', 'Требует ремонта'),
+('Плоскогубцы', 15, 'Мария Сидорова', 'Исправен'),
+('Дрель', 5, 'Ольга Кузнецова', 'Исправен'),
+('Шуруповерт', 8, 'Дмитрий Орлов', 'Неисправен');
+
+INSERT INTO personnel (employee_name, id_process, id_raw, id_tool, id_tz) VALUES
+('Иван Петров', 1, 1, 1, 1),
+('Сергей Иванов', 2, 2, 2, 2),
+('Мария Сидорова', 3, 3, 3, 3),
+('Ольга Кузнецова', 4, 4, 4, 4),
+('Дмитрий Орлов', 5, 5, 5, 5);
+
+INSERT INTO product (type, name, quantity, quality, production_date, id_tool) VALUES
+('Металлический', 'Шуруп', 500, 'Высокое', '2024-06-10', 1),
+('Металлический', 'Гайка', 300, 'Среднее', '2024-06-12', 2),
+('Металлический', 'Болт', 1000, 'Высокое', '2024-06-15', 3),
+('Металлический', 'Шайба', 200, 'Низкое', '2024-06-18', 4),
+('Проволочный', 'Проволока', 400, 'Среднее', '2024-06-20', 5);
+
+INSERT INTO defects (stage, quantity, defect_percentage_stat, id_tool) VALUES
+('Этап 1', 10, 2.0, 1),
+('Этап 2', 5, 1.5, 2),
+('Этап 3', 8, 1.8, 3),
+('Этап 4', 3, 0.5, 4),
+('Этап 5', 6, 1.0, 5);

@@ -1,113 +1,85 @@
--- 1. Логирование изменений в заказах
--- Триггер записывает изменения статуса заказа в таблицу логов.
--- Создаем таблицу для логов
-CREATE TABLE order_logs (
-    id SERIAL PRIMARY KEY,
-    order_id INTEGER NOT NULL,
-    old_state ENUM('created', 'approved', 'producing', 'waiting_for_delivery', 'delivery', 'completed'),
-    new_state ENUM('created', 'approved', 'producing', 'waiting_for_delivery', 'delivery', 'completed'),
+-- 1. Автоматическое заполнение текущей даты при добавлении заказа
+CREATE OR REPLACE FUNCTION set_order_date()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.order_date := CURRENT_DATE;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_set_order_date
+BEFORE INSERT ON service_center
+FOR EACH ROW
+EXECUTE FUNCTION set_order_date();
+
+-- 2. Проверка качества продукта при добавлении в product
+CREATE OR REPLACE FUNCTION check_product_quality()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.quality NOT IN ('Высокое', 'Среднее', 'Низкое') THEN
+        RAISE EXCEPTION 'Недопустимое качество продукта: %', NEW.quality;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_check_product_quality
+BEFORE INSERT OR UPDATE ON product
+FOR EACH ROW
+EXECUTE FUNCTION check_product_quality();
+
+-- 3. Обновление количества инструментов после их использования
+CREATE OR REPLACE FUNCTION update_tool_quantity()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.quantity < 0 THEN
+        RAISE EXCEPTION 'Количество инструмента не может быть отрицательным!';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_tool_quantity
+BEFORE UPDATE ON tools
+FOR EACH ROW
+EXECUTE FUNCTION update_tool_quantity();
+
+
+-- 4. Логирование изменений в таблице personnel
+CREATE TABLE personnel_log (
+    log_id SERIAL PRIMARY KEY,
+    employee_name TEXT,
+    action TEXT,
     change_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Функция для записи изменений
-CREATE OR REPLACE FUNCTION log_order_changes()
+CREATE OR REPLACE FUNCTION log_personnel_changes()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF OLD.state IS DISTINCT FROM NEW.state THEN
-        INSERT INTO order_logs (order_id, old_state, new_state)
-        VALUES (OLD.id, OLD.state, NEW.state);
+    INSERT INTO personnel_log (employee_name, action)
+    VALUES (OLD.employee_name, 'Удаление');
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_log_personnel
+AFTER DELETE ON personnel
+FOR EACH ROW
+EXECUTE FUNCTION log_personnel_changes();
+
+
+-- Триггер 5: Проверка наличия достаточного количества сырья
+CREATE OR REPLACE FUNCTION check_raw_material_availability()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.quantity < 10 THEN
+        RAISE WARNING 'Остаток сырья низкий: %', NEW.name;
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Триггер
-CREATE TRIGGER trigger_log_order_changes
-AFTER UPDATE ON "order"
+CREATE TRIGGER trigger_check_raw_material
+BEFORE UPDATE ON raw_material
 FOR EACH ROW
-WHEN (OLD.state IS DISTINCT FROM NEW.state)
-EXECUTE FUNCTION log_order_changes();
-
-
--- 2. Автоматическое обновление времени изменения
--- Добавляет или обновляет поле last_updated при изменении записи.
--- Добавим поле last_updated, если его нет
-ALTER TABLE "order" ADD COLUMN last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-
--- Функция для обновления времени
-CREATE OR REPLACE FUNCTION update_last_updated()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.last_updated = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Триггер
-CREATE TRIGGER trigger_update_last_updated
-BEFORE UPDATE ON "order"
-FOR EACH ROW
-EXECUTE FUNCTION update_last_updated();
-
-
--- 3. Валидация количества при создании заказа
--- Гарантирует, что количество (quantity) положительное и не нулевое.
--- Функция проверки
-CREATE OR REPLACE FUNCTION validate_order_quantity()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.quantity <= 0 THEN
-        RAISE EXCEPTION 'Quantity must be greater than 0';
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Триггер
-CREATE TRIGGER trigger_validate_order_quantity
-BEFORE INSERT ON "order"
-FOR EACH ROW
-EXECUTE FUNCTION validate_order_quantity();
-
-
--- 4. Обновление состояния заказа
--- Автоматически переводит заказ в статус completed, если выполнены условия.
--- Функция для автоматического изменения состояния
-CREATE OR REPLACE FUNCTION auto_complete_order()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.state = 'delivery' THEN
-        NEW.state = 'completed';
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Триггер
-CREATE TRIGGER trigger_auto_complete_order
-BEFORE UPDATE ON "order"
-FOR EACH ROW
-WHEN (NEW.state = 'delivery')
-EXECUTE FUNCTION auto_complete_order();
-
-
--- 5. Связь между заказом и спецификацией
--- Запрещает создание заказа с несуществующей спецификацией.
--- Функция проверки спецификации
-CREATE OR REPLACE FUNCTION validate_tech_spec()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM tech_spec WHERE id = NEW.tech_spec_id) THEN
-        RAISE EXCEPTION 'Tech Spec ID % does not exist', NEW.tech_spec_id;
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Триггер
-CREATE TRIGGER trigger_validate_tech_spec
-BEFORE INSERT OR UPDATE ON "order"
-FOR EACH ROW
-EXECUTE FUNCTION validate_tech_spec();
-
-
+EXECUTE FUNCTION check_raw_material_availability();

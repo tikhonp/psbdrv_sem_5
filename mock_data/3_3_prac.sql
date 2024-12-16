@@ -1,56 +1,64 @@
 -- Функции
--- 1. Получение описания состояния заказа
-CREATE OR REPLACE FUNCTION get_order_state_description(state ENUM)
+-- 1. Подсчёт количества сотрудников на процессе
+CREATE OR REPLACE FUNCTION count_employees_on_process(process_id INT)
+RETURNS INT AS $$
+DECLARE
+    employee_count INT;
+BEGIN
+    SELECT COUNT(*) INTO employee_count
+    FROM personnel
+    WHERE id_process = process_id;
+    RETURN employee_count;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 2. Получить общее количество инструментов
+CREATE OR REPLACE FUNCTION get_total_tools()
+RETURNS INT AS $$
+DECLARE
+    total INT;
+BEGIN
+    SELECT SUM(quantity) INTO total
+    FROM tools;
+    RETURN total;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 3. Проверка состояния инструмента по его ID
+CREATE OR REPLACE FUNCTION get_tool_condition(tool_id INT)
 RETURNS TEXT AS $$
+DECLARE
+    condition TEXT;
 BEGIN
-    RETURN CASE state
-        WHEN 'created' THEN 'Order created'
-        WHEN 'approved' THEN 'Order approved'
-        WHEN 'producing' THEN 'Producing in progress'
-        WHEN 'waiting_for_delivery' THEN 'Waiting for delivery'
-        WHEN 'delivery' THEN 'Delivery in progress'
-        WHEN 'completed' THEN 'Order completed'
-        ELSE 'Unknown state'
-    END;
+    SELECT condition INTO condition
+    FROM tools
+    WHERE id_tool = tool_id;
+    RETURN condition;
 END;
 $$ LANGUAGE plpgsql;
 
-
--- 2. Расчет общего количества заказов клиента
-CREATE OR REPLACE FUNCTION total_orders_by_customer(customer_id INTEGER)
-RETURNS INTEGER AS $$
+-- 4. Получение всех заказов за текущий месяц
+CREATE OR REPLACE FUNCTION get_current_month_orders()
+RETURNS TABLE (id_order INT, customer_name TEXT, order_date DATE) AS $$
 BEGIN
-    RETURN (SELECT COUNT(*) FROM "order" WHERE customer_id = $1);
+    RETURN QUERY
+    SELECT id_order, customer_name, order_date
+    FROM service_center
+    WHERE EXTRACT(MONTH FROM order_date) = EXTRACT(MONTH FROM CURRENT_DATE)
+      AND EXTRACT(YEAR FROM order_date) = EXTRACT(YEAR FROM CURRENT_DATE);
 END;
 $$ LANGUAGE plpgsql;
 
-
--- 3. Получение списка заказов по дате
-CREATE OR REPLACE FUNCTION get_orders_by_date(date DATE)
-RETURNS TABLE(id INTEGER, state ENUM, quantity INTEGER) AS $$
+-- 5. Подсчёт брака по инструменту
+CREATE OR REPLACE FUNCTION calculate_defect_percentage(tool_id INT)
+RETURNS NUMERIC AS $$
+DECLARE
+    defect_percentage NUMERIC;
 BEGIN
-    RETURN QUERY SELECT id, state, quantity FROM "order" WHERE date = $1;
-END;
-$$ LANGUAGE plpgsql;
-
-
--- 4. Проверка наличия клиента
-CREATE OR REPLACE FUNCTION is_customer_exists(customer_id INTEGER)
-RETURNS BOOLEAN AS $$
-BEGIN
-    RETURN EXISTS (SELECT 1 FROM customer WHERE id = $1);
-END;
-$$ LANGUAGE plpgsql;
-
-
--- 5. Получение качества продукта
-CREATE OR REPLACE FUNCTION get_product_quality(tech_spec_id INTEGER)
-RETURNS TEXT AS $$
-BEGIN
-    RETURN (SELECT description 
-            FROM quality_levels ql
-            JOIN tech_spec ts ON ql.id = ts.quality
-            WHERE ts.id = $1);
+    SELECT AVG(defect_percentage_stat) INTO defect_percentage
+    FROM defects
+    WHERE id_tool = tool_id;
+    RETURN defect_percentage;
 END;
 $$ LANGUAGE plpgsql;
 

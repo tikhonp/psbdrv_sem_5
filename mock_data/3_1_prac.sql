@@ -1,49 +1,53 @@
 -- Операция проекции
-select name from customer;
+SELECT position, phone_number
+FROM personal_data;
+
 
 -- Операция селекции
-select name from customer where description = 'Производство кирпичей';
+SELECT *
+FROM raw_material
+WHERE quantity > 300;
+
 
 -- Операции соединения
-select o.date, c.name as customer_name
-from "order" o
-join public.customer c on c.id = o.customer_id;
+SELECT personnel.employee_name, production_process.semi_product_name
+FROM personnel
+JOIN production_process ON personnel.id_process = production_process.id_process;
+
 
 -- Операция объединения
-select o.date, c.name as customer_name
-from "order" o
-join public.customer c on c.id = o.customer_id
-where o.quantity = 100 OR o.quantity = 400;
+SELECT name AS item_name
+FROM tools
+UNION
+SELECT name AS item_name
+FROM raw_material;
+
 
 -- Операция пересечения
-select o.date, c.name as customer_name
-from "order" o
-inner join public.customer c on c.id = o.customer_id
-where o.quantity = 100
-and exists(select * from "order" o where o.customer_id=c.id and o.quantity = 100);
+SELECT name
+FROM tools
+INTERSECT
+SELECT name
+FROM raw_material;
+
 
 -- Операция разности
-select o.date, c.name as customer_name
-from "order" o
-         inner join public.customer c on c.id = o.customer_id
-where o.quantity = 100
-  and not exists(select * from "order" o where o.customer_id=c.id and o.quantity = 100);
+SELECT name
+FROM tools
+EXCEPT
+SELECT name
+FROM raw_material;
+
 
 -- Операция группировки
-select c.name, o.quantity
-from "order" o
-inner join public.customer c on c.id = o.customer_id
-group by o.quantity, c.name;
+SELECT id_process, COUNT(*) AS employee_count
+FROM personnel
+GROUP BY id_process;
 
--- Операция группировки
-select c.name, o.quantity
-from "order" o
-inner join public.customer c on c.id = o.customer_id
-group by o.quantity, c.name order by o.quantity;
 
 -- Операция сортировки
-select c.name, o.quantity, COUNT(*) AS count
-from "order" o
-inner join public.customer c on c.id = o.customer_id
-group by o.quantity, c.name order by count;
+SELECT name, quantity
+FROM tools
+ORDER BY quantity DESC;
+
 

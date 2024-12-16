@@ -1,52 +1,44 @@
 -- Процедуры
--- 1. Создание нового заказа
-CREATE OR REPLACE PROCEDURE create_order(
-    customer_id INTEGER, 
-    tech_spec_id INTEGER, 
-    quantity INTEGER, 
-    quantity_unit ENUM
-)
+-- 1. Добавление нового инструмента
+CREATE OR REPLACE PROCEDURE add_new_tool(tool_name TEXT, tool_quantity INT, tool_condition TEXT)
 LANGUAGE plpgsql AS $$
 BEGIN
-    INSERT INTO "order" (customer_id, tech_spec_id, state, quantity, quantity_unit, date)
-    VALUES (customer_id, tech_spec_id, 'created', quantity, quantity_unit, CURRENT_DATE);
+    INSERT INTO tools (name, quantity, condition)
+    VALUES (tool_name, tool_quantity, tool_condition);
 END;
 $$;
 
-
--- 2. Обновление состояния заказа
-CREATE OR REPLACE PROCEDURE update_order_state(order_id INTEGER, new_state ENUM)
+-- 2. Удаление заказа по ID
+CREATE OR REPLACE PROCEDURE delete_order_by_id(order_id INT)
 LANGUAGE plpgsql AS $$
 BEGIN
-    UPDATE "order" SET state = new_state WHERE id = order_id;
+    DELETE FROM service_center WHERE id_order = order_id;
 END;
 $$;
 
-
--- 3. Удаление заказов клиента
-CREATE OR REPLACE PROCEDURE delete_customer_orders(customer_id INTEGER)
+-- 3. Обновление количества сырья
+CREATE OR REPLACE PROCEDURE update_raw_material_quantity(material_id INT, new_quantity INT)
 LANGUAGE plpgsql AS $$
 BEGIN
-    DELETE FROM "order" WHERE customer_id = customer_id;
+    UPDATE raw_material
+    SET quantity = new_quantity
+    WHERE id_raw = material_id;
 END;
 $$;
 
-
--- 4. Обновление информации о клиенте
-CREATE OR REPLACE PROCEDURE update_customer_info(customer_id INTEGER, new_name VARCHAR, new_description TEXT)
+-- 4. Добавление нового сотрудника
+CREATE OR REPLACE PROCEDURE add_new_employee(emp_name TEXT, process_id INT, raw_id INT, tool_id INT, tz_id INT)
 LANGUAGE plpgsql AS $$
 BEGIN
-    UPDATE customer 
-    SET name = new_name, description = new_description 
-    WHERE id = customer_id;
+    INSERT INTO personnel (employee_name, id_process, id_raw, id_tool, id_tz)
+    VALUES (emp_name, process_id, raw_id, tool_id, tz_id);
 END;
 $$;
 
-
--- 5. Очистка старых заказов
-CREATE OR REPLACE PROCEDURE clean_old_orders(clean_date DATE)
+-- 5. Очистка таблицы брака
+CREATE OR REPLACE PROCEDURE clear_defects_table()
 LANGUAGE plpgsql AS $$
 BEGIN
-    DELETE FROM "order" WHERE date < clean_date;
+    DELETE FROM defects;
 END;
 $$;
