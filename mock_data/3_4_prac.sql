@@ -50,3 +50,63 @@ BEGIN
     DELETE FROM "order" WHERE date < clean_date;
 END;
 $$;
+
+CREATE OR REPLACE PROCEDURE add_order(
+    p_customer_name TEXT,
+    p_product_type_name TEXT,
+    p_quality_name TEXT,
+    p_date DATE,
+    p_state order_state,
+    p_quantity INTEGER,
+    p_quantity_unit quantity_unit
+)
+LANGUAGE plpgsql AS $$
+DECLARE
+    v_customer_id INTEGER;
+    v_product_type_id INTEGER;
+    v_quality_id INTEGER;
+    v_tech_spec_id INTEGER;
+BEGIN
+    -- Получаем ID клиента
+    SELECT id INTO v_customer_id 
+    FROM customer 
+    WHERE name = p_customer_name;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Customer % not found', p_customer_name;
+    END IF;
+
+    -- Получаем ID типа продукта
+    SELECT id INTO v_product_type_id 
+    FROM product_type 
+    WHERE name = p_product_type_name;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Product type % not found', p_product_type_name;
+    END IF;
+
+    -- Получаем ID качества
+    SELECT id INTO v_quality_id 
+    FROM quality 
+    WHERE name = p_quality_name;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Quality % not found', p_quality_name;
+    END IF;
+
+    -- Получаем или создаем техническую спецификацию
+    SELECT id INTO v_tech_spec_id 
+    FROM tech_spec 
+    WHERE product_type_id = v_product_type_id AND quality_id = v_quality_id;
+
+    IF NOT FOUND THEN
+        INSERT INTO tech_spec (product_type_id, quality_id) 
+        VALUES (v_product_type_id, v_quality_id)
+        RETURNING id INTO v_tech_spec_id;
+    END IF;
+
+    -- Создаем заказ
+    INSERT INTO "order" (date, tech_spec_id, customer_id, state, quantity, quantity_unit)
+    VALUES (p_date, v_tech_spec_id, v_customer_id, p_state, p_quantity, p_quantity_unit);
+
+    RAISE NOTICE 'Order successfully added for customer % on date %', p_customer_name, p_date;
+END;
+$$;
+

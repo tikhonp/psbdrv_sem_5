@@ -1,6 +1,6 @@
 -- Функции
 -- 1. Получение описания состояния заказа
-CREATE OR REPLACE FUNCTION get_order_state_description(state ENUM)
+CREATE OR REPLACE FUNCTION get_order_state_description(state order_state)
 RETURNS TEXT AS $$
 BEGIN
     RETURN CASE state
@@ -17,21 +17,25 @@ $$ LANGUAGE plpgsql;
 
 
 -- 2. Расчет общего количества заказов клиента
-CREATE OR REPLACE FUNCTION total_orders_by_customer(customer_id INTEGER)
+CREATE OR REPLACE FUNCTION total_orders_by_customer(cid INTEGER)
 RETURNS INTEGER AS $$
 BEGIN
-    RETURN (SELECT COUNT(*) FROM "order" WHERE customer_id = $1);
+    RETURN (SELECT COUNT(*) FROM "order" WHERE cid = $1);
 END;
 $$ LANGUAGE plpgsql;
 
 
 -- 3. Получение списка заказов по дате
-CREATE OR REPLACE FUNCTION get_orders_by_date(date DATE)
-RETURNS TABLE(id INTEGER, state ENUM, quantity INTEGER) AS $$
+CREATE OR REPLACE FUNCTION get_orders_by_date(cdate DATE)
+RETURNS INTEGER AS $$
 BEGIN
-    RETURN QUERY SELECT id, state, quantity FROM "order" WHERE date = $1;
+    RETURN (SELECT o.id
+            FROM "order" o
+            WHERE o.date = cdate
+    );
 END;
 $$ LANGUAGE plpgsql;
+
 
 
 -- 4. Проверка наличия клиента
@@ -47,10 +51,11 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_product_quality(tech_spec_id INTEGER)
 RETURNS TEXT AS $$
 BEGIN
-    RETURN (SELECT description 
-            FROM quality_levels ql
-            JOIN tech_spec ts ON ql.id = ts.quality
+    RETURN (SELECT ql.name
+            FROM quality ql
+            JOIN tech_spec ts ON ql.id = ts.quality_id
             WHERE ts.id = $1);
 END;
 $$ LANGUAGE plpgsql;
+
 

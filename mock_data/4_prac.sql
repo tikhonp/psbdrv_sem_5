@@ -5,6 +5,8 @@ SELECT
     state,
     COUNT(*) OVER (PARTITION BY state) AS orders_count_per_state
 FROM "order";
+call create_order(1, 1, 100, 'ton')
+
 
 -- SUM
 -- количество заказанных тонн продукта для каждого состояния
@@ -48,19 +50,21 @@ FROM "order";
 
 -- RANK
 -- Присваиваем каждому заказу ранг по количеству, учитывая равенство значений, для каждого клиента
-SELECT 
+SELECT
     id AS order_id,
     customer_id,
-    RANK() OVER (PARTITION BY customer_id ORDER BY quantity DESC) AS rank_per_customer
+    RANK() OVER (ORDER BY state) AS rank_per_customer
 FROM "order";
+
 
 -- DENSE_RANK
 -- Присваиваем плотный ранг (без пропусков) каждому заказу по количеству для каждого клиента.
-SELECT 
+SELECT
     id AS order_id,
     customer_id,
-    DENSE_RANK() OVER (PARTITION BY customer_id ORDER BY quantity DESC) AS dense_rank_per_customer
+    DENSE_RANK() OVER (ORDER BY state) AS rank_per_customer
 FROM "order";
+
 
 -- NTILE
 -- Делим заказы каждого клиента на 4 равные группы (если возможно).
@@ -77,6 +81,14 @@ SELECT
     customer_id,
     quantity,
     LAG(quantity) OVER (PARTITION BY customer_id ORDER BY date) AS previous_quantity
+FROM "order";
+
+-- LEAD
+SELECT 
+    id AS order_id,
+    customer_id,
+    quantity,
+    LEAD(quantity) OVER (PARTITION BY customer_id ORDER BY date) AS previous_quantity
 FROM "order";
 
 
