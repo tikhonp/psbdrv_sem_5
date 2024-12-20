@@ -4,8 +4,8 @@
 CREATE TABLE order_logs (
     id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL,
-    old_state ENUM('created', 'approved', 'producing', 'waiting_for_delivery', 'delivery', 'completed'),
-    new_state ENUM('created', 'approved', 'producing', 'waiting_for_delivery', 'delivery', 'completed'),
+    old_state order_state,
+    new_state order_state,
     change_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
