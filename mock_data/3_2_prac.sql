@@ -44,7 +44,6 @@ BEFORE UPDATE ON tools
 FOR EACH ROW
 EXECUTE FUNCTION update_tool_quantity();
 
-
 -- 4. Логирование изменений в таблице personnel
 CREATE TABLE personnel_log (
     log_id SERIAL PRIMARY KEY,

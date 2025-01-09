@@ -28,18 +28,18 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_tool_condition(tool_id INT)
 RETURNS TEXT AS $$
 DECLARE
-    condition TEXT;
+    cond TEXT;
 BEGIN
-    SELECT condition INTO condition
+    SELECT condition INTO cond
     FROM tools
     WHERE id_tool = tool_id;
-    RETURN condition;
+    RETURN cond;
 END;
 $$ LANGUAGE plpgsql;
 
 -- 4. Получение всех заказов за текущий месяц
 CREATE OR REPLACE FUNCTION get_current_month_orders()
-RETURNS TABLE (id_order INT, customer_name TEXT, order_date DATE) AS $$
+RETURNS TABLE (id_o INT, cus_name VARCHAR(255), order_d DATE) AS $$
 BEGIN
     RETURN QUERY
     SELECT id_order, customer_name, order_date
