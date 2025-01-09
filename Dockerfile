@@ -11,7 +11,10 @@ WORKDIR /src
 RUN apt-get update && \
     apt-get install -y default-jdk && \
     apt-get install -y ant && \
+    apt-get install -y libpq-dev build-essential less python3 python3-pip && \
     apt-get clean;
+
+RUN pip install pgcli --break-system-packages
     
 # Fix certificate issues
 RUN apt-get update && \
